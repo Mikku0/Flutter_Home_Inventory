@@ -25,10 +25,11 @@ class InventoryPage extends StatefulWidget {
 
 class _InventoryPageState extends State<InventoryPage> {
   final List<Item> _items = [];
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _itemController = TextEditingController();
+  final TextEditingController _categoryController = TextEditingController();
   String _selectedCategory = 'Kitchen 🍽️';
 
-  final List<String> _categories = [
+  List<String> _categories = [
     'Kitchen 🍽️',
     'Bedroom 🛋️',
     'Living Room 🛏️',
@@ -38,8 +39,20 @@ class _InventoryPageState extends State<InventoryPage> {
   void _addItem(String name, String category) {
     setState(() {
       _items.add(Item(name: name, category: category));
-      _controller.clear();
+      _itemController.clear();
     });
+  }
+
+  void _addCategory() {
+    String newCategory = _categoryController.text.trim();
+    if (newCategory.isNotEmpty && !_categories.contains(newCategory)) {
+      setState(() {
+        _categories.add(newCategory);
+        _selectedCategory = newCategory;
+        _categoryController.clear();
+      });
+      Navigator.pop(context);
+    }
   }
 
   void _removeItem(int index) {
@@ -52,6 +65,39 @@ class _InventoryPageState extends State<InventoryPage> {
     setState(() {
       _items[index].isOwned = value ?? false;
     });
+  }
+
+  void _showAddCategorySheet() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _categoryController,
+                  decoration: InputDecoration(
+                    labelText: 'Category name',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: _addCategory,
+                  child: Text('Add'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -68,7 +114,7 @@ class _InventoryPageState extends State<InventoryPage> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _controller,
+                    controller: _itemController,
                     decoration: InputDecoration(
                       labelText: 'Add Item',
                       border: OutlineInputBorder(),
@@ -80,24 +126,34 @@ class _InventoryPageState extends State<InventoryPage> {
                   value: _selectedCategory,
                   onChanged: (String? newValue) {
                     if (newValue != null) {
-                      setState(() {
-                        _selectedCategory = newValue;
-                      });
+                      if (newValue == 'Add Category') {
+                        _showAddCategorySheet();
+                      } else {
+                        setState(() {
+                          _selectedCategory = newValue;
+                        });
+                      }
                     }
                   },
-                  items:
-                      _categories.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
+                  items: [
+                    ..._categories
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    DropdownMenuItem<String>(
+                      value: 'Add Category',
+                      child: Text('[Add Category]'),
+                    ),
+                  ],
                 ),
                 IconButton(
                   icon: Icon(Icons.add),
                   onPressed: () {
-                    if (_controller.text.isNotEmpty) {
-                      _addItem(_controller.text, _selectedCategory);
+                    if (_itemController.text.isNotEmpty) {
+                      _addItem(_itemController.text, _selectedCategory);
                     }
                   },
                 ),
