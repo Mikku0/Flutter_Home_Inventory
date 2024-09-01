@@ -26,10 +26,18 @@ class InventoryPage extends StatefulWidget {
 class _InventoryPageState extends State<InventoryPage> {
   final List<Item> _items = [];
   final TextEditingController _controller = TextEditingController();
+  String _selectedCategory = 'Kitchen 🍽️';
 
-  void _addItem(String name) {
+  final List<String> _categories = [
+    'Kitchen 🍽️',
+    'Bedroom 🛋️',
+    'Living Room 🛏️',
+    'Bathroom 🛁'
+  ];
+
+  void _addItem(String name, String category) {
     setState(() {
-      _items.add(Item(name: name));
+      _items.add(Item(name: name, category: category));
       _controller.clear();
     });
   }
@@ -62,16 +70,34 @@ class _InventoryPageState extends State<InventoryPage> {
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(
-                      labelText: 'Add Items',
+                      labelText: 'Add Item',
                       border: OutlineInputBorder(),
                     ),
                   ),
+                ),
+                SizedBox(width: 10),
+                DropdownButton<String>(
+                  value: _selectedCategory,
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _selectedCategory = newValue;
+                      });
+                    }
+                  },
+                  items:
+                      _categories.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
                 ),
                 IconButton(
                   icon: Icon(Icons.add),
                   onPressed: () {
                     if (_controller.text.isNotEmpty) {
-                      _addItem(_controller.text);
+                      _addItem(_controller.text, _selectedCategory);
                     }
                   },
                 ),
@@ -86,18 +112,28 @@ class _InventoryPageState extends State<InventoryPage> {
                   title: Row(
                     children: [
                       Expanded(
-                        child: CheckboxListTile(
-                          contentPadding: EdgeInsets.only(left: 10.0),
-                          title: Text(
-                            _items[index].name,
-                            style: TextStyle(
-                              fontSize: 18.0,
-                              fontFamily: 'SUSE',
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _items[index].name,
+                              style: TextStyle(
+                                fontSize: 18.0,
+                              ),
                             ),
-                          ),
-                          value: _items[index].isOwned,
-                          onChanged: (value) => _toggleItemStatus(index, value),
+                            Text(
+                              '(${_items[index].category})',
+                              style: TextStyle(
+                                fontSize: 18.0,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+                      Checkbox(
+                        value: _items[index].isOwned,
+                        onChanged: (value) => _toggleItemStatus(index, value),
                       ),
                       IconButton(
                         icon: Icon(Icons.delete),
@@ -117,7 +153,8 @@ class _InventoryPageState extends State<InventoryPage> {
 
 class Item {
   final String name;
+  final String category;
   bool isOwned;
 
-  Item({required this.name, this.isOwned = false});
+  Item({required this.name, required this.category, this.isOwned = false});
 }
